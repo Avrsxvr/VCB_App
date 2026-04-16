@@ -12,7 +12,7 @@ function App() {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [playingIntro, setPlayingIntro] = useState(false);
   const targetUrl = 'https://www.vcb.services';
-  const videoSrc = '/icons/intro_compressed.mp4'; // New compressed video
+  const videoSrc = '/icons/pollito_compressed.mp4'; // New compressed video
 
   const handleRedirect = useCallback(() => {
     if (isRedirecting) return;
