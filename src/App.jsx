@@ -23,24 +23,29 @@ function App() {
   }, [isRedirecting, targetUrl]);
 
   const handleInstallAction = async () => {
+    console.log('Install action triggered. deferredPrompt:', !!deferredPrompt);
     if (deferredPrompt) {
       // Trigger the prompt
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
+      console.log('User choice outcome:', outcome);
       
       if (outcome === 'accepted') {
+        console.log('Installation accepted. Playing download video...');
         // Play the specific "Download Started" video
-        setCurrentVideo('/icons/25210 (1).mp4');
+        setCurrentVideo('/icons/download_video.mp4');
         setPlayingIntro(true);
       }
       setShowInstallBanner(false);
     } else if (isIOS) {
+      console.log('IOS detected, showing instructions');
       // Scroll to instructions
       const contactInfo = document.querySelector('.ios-instruction');
       if (contactInfo) {
         contactInfo.scrollIntoView({ behavior: 'smooth' });
       }
     } else {
+      console.log('No install prompt available. Redirecting...');
       // Fallback: If no install prompt is available, just redirect
       handleRedirect();
     }
@@ -50,6 +55,7 @@ function App() {
     // If the app is opened from the icon (isAppInstalled/standalone mode)
     // Play the "Icon Click" video
     if (isAppInstalled) {
+      console.log('App detected as installed/standalone. Playing icon click video...');
       const timer = setTimeout(() => {
         setCurrentVideo('/icons/pollito_compressed.mp4');
         setPlayingIntro(true);
