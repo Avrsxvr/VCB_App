@@ -3,76 +3,48 @@ import { usePWAInstall } from './hooks/usePWAInstall';
 import { InstallBanner } from './components/InstallBanner';
 import { IOSInstructions } from './components/IOSInstructions';
 import { VideoIntro } from './components/VideoIntro';
-import { Download, ArrowRight, CheckCircle } from 'lucide-react';
+import { Download, CheckCircle } from 'lucide-react';
 import './index.css';
 
 function App() {
-  const { deferredPrompt, isAppInstalled, isIOS, installApp } = usePWAInstall();
+  const { deferredPrompt, isAppInstalled, isIOS, isStandalone, installApp } = usePWAInstall();
   const [showInstallBanner, setShowInstallBanner] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [playingIntro, setPlayingIntro] = useState(false);
   const [currentVideo, setCurrentVideo] = useState('');
-  const [hasJustInstalled, setHasJustInstalled] = useState(false);
   const targetUrl = 'https://www.vcb.services';
 
   const handleRedirect = useCallback(() => {
     if (isRedirecting) return;
     setIsRedirecting(true);
-    setPlayingIntro(false); // Remove video when redirecting
-    console.log('Redirecting to target URL:', targetUrl);
+    setPlayingIntro(false);
     setTimeout(() => {
       window.location.href = targetUrl;
     }, 800);
   }, [isRedirecting, targetUrl]);
 
+  // Handle "Download App" button click
   const handleInstallAction = async () => {
-    console.log('Install action triggered. deferredPrompt:', !!deferredPrompt);
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      console.log('User choice outcome:', outcome);
       
       if (outcome === 'accepted') {
-        console.log('Installation accepted. Playing download video...');
-        try { localStorage.setItem('pwa-installed', 'true'); } catch(e) {}
-        setHasJustInstalled(true);
+        // Play the download video after user accepts
         setCurrentVideo('/icons/download_video_optimized.mp4');
         setPlayingIntro(true);
       }
-      setShowInstallBanner(false);
     } else if (isIOS) {
       const contactInfo = document.querySelector('.ios-instruction');
       if (contactInfo) {
         contactInfo.scrollIntoView({ behavior: 'smooth' });
       }
-    } else {
-      handleRedirect();
     }
   };
 
-  let isActuallyInstalled = false;
-  try {
-    isActuallyInstalled = localStorage.getItem('pwa-installed') === 'true' || isAppInstalled;
-  } catch (e) {
-    isActuallyInstalled = isAppInstalled;
-  }
-
+  // ONLY play pollito video when opened from HOME SCREEN ICON (standalone mode)
   useEffect(() => {
-    // Check for standalone mode immediately on mount with safety
-    let isStandalone = false;
-    try {
-      isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                     window.navigator.standalone || 
-                     (document.referrer && document.referrer.includes('android-app://')) ||
-                     new URLSearchParams(window.location.search).get('source') === 'pwa';
-    } catch (e) {
-      console.error('Detection error:', e);
-    }
-
     if (isStandalone) {
-      console.log('Standalone mode detected.');
-      try { localStorage.setItem('pwa-installed', 'true'); } catch(e) {}
-      
       const hasPlayedThisSession = sessionStorage.getItem('intro-played') === 'true';
       
       if (!hasPlayedThisSession) {
@@ -89,8 +61,10 @@ function App() {
       
       return () => clearTimeout(fallbackTimer);
     }
-  }, [handleRedirect, isAppInstalled]);
+    // In browser mode: do nothing, just show the landing page
+  }, [isStandalone, handleRedirect]);
 
+  // Show install banner after a delay
   useEffect(() => {
     if (deferredPrompt && !sessionStorage.getItem('bannerDismissed')) {
       const timer = setTimeout(() => {
@@ -122,19 +96,17 @@ function App() {
         
         <h1 className="title delay-2">POLLITO CHICKEN FINGERS</h1>
         <p className="subtitle delay-3">
-          {isActuallyInstalled 
-            ? "Your app is ready. Open it from your home screen for the best experience."
+          {isAppInstalled 
+            ? "Your app is ready! Open it from your home screen for the best experience."
             : "Access instantly from your home screen for a seamless, fast experience."}
         </p>
 
         <div className="button-group delay-3">
-          {isActuallyInstalled ? (
-            <div className="installed-badge">
-              <button className="btn btn-primary" onClick={handleRedirect} style={{ backgroundColor: '#059669' }}>
-                <CheckCircle size={20} />
-                App Downloaded
-              </button>
-            </div>
+          {isAppInstalled ? (
+            <button className="btn btn-primary" onClick={handleRedirect} style={{ backgroundColor: '#059669' }}>
+              <CheckCircle size={20} />
+              App Downloaded
+            </button>
           ) : (
             <button className="btn btn-primary" onClick={handleInstallAction}>
               <Download size={20} />
