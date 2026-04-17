@@ -18,6 +18,7 @@ function App() {
   const handleRedirect = useCallback(() => {
     if (isRedirecting) return;
     setIsRedirecting(true);
+    console.log('Redirecting to target URL:', targetUrl);
     setTimeout(() => {
       window.location.href = targetUrl;
     }, 800);
@@ -26,46 +27,51 @@ function App() {
   const handleInstallAction = async () => {
     console.log('Install action triggered. deferredPrompt:', !!deferredPrompt);
     if (deferredPrompt) {
-      // Trigger the prompt
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       console.log('User choice outcome:', outcome);
       
       if (outcome === 'accepted') {
         console.log('Installation accepted. Playing download video...');
-        setHasJustInstalled(true); // Prevent the "Icon Click" video from firing immediately
+        setHasJustInstalled(true);
         setCurrentVideo('/icons/download_video.mp4');
         setPlayingIntro(true);
       }
       setShowInstallBanner(false);
     } else if (isIOS) {
-      console.log('IOS detected, showing instructions');
-      // Scroll to instructions
       const contactInfo = document.querySelector('.ios-instruction');
       if (contactInfo) {
         contactInfo.scrollIntoView({ behavior: 'smooth' });
       }
     } else {
-      console.log('No install prompt available. Redirecting...');
       handleRedirect();
     }
   };
 
   useEffect(() => {
-    // Detect if the app is opened in standalone mode (from the icon)
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    
-    // If we're in standalone mode AND we didn't just install it 
-    // (This ensures when they click the icon LATER, they see pollito_compressed)
-    if (isStandalone && !hasJustInstalled) {
-      console.log('App opened from icon. Playing intro video...');
+    // Check for standalone mode immediately on mount
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                        window.navigator.standalone || 
+                        document.referrer.includes('android-app://');
+
+    console.log('Mount check - isStandalone:', isStandalone);
+
+    if (isStandalone) {
+      console.log('Standalone mode detected. Setting intro video...');
       setCurrentVideo('/icons/pollito_compressed.mp4');
       setPlayingIntro(true);
+      
+      // Fallback: If for some reason the video doesn't end or show, redirect after a safe timeout
+      const fallbackTimer = setTimeout(() => {
+        console.log('Fallback redirect triggered after timeout');
+        handleRedirect();
+      }, 15000); // 15 seconds max for intro
+      
+      return () => clearTimeout(fallbackTimer);
     }
-  }, [isAppInstalled, hasJustInstalled]);
+  }, [handleRedirect]); // Run on mount
 
   useEffect(() => {
-    // Show install banner if prompt is available, and hasn't been dismissed in this session
     if (deferredPrompt && !sessionStorage.getItem('bannerDismissed')) {
       const timer = setTimeout(() => {
         setShowInstallBanner(true);
