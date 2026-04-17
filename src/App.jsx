@@ -18,6 +18,7 @@ function App() {
   const handleRedirect = useCallback(() => {
     if (isRedirecting) return;
     setIsRedirecting(true);
+    setPlayingIntro(false); // Remove video when redirecting
     console.log('Redirecting to target URL:', targetUrl);
     setTimeout(() => {
       window.location.href = targetUrl;
