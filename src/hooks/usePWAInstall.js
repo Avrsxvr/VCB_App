@@ -11,18 +11,22 @@ export const usePWAInstall = () => {
     return /iphone|ipad|ipod/.test(userAgent) || isIPad;
   });
 
-  // Real-time check: are we in standalone mode right now?
+  // STRICT standalone check: ONLY true when opened from app icon
+  // Uses the ?source=pwa query param we set in manifest.json start_url
   const [isStandalone] = useState(() => {
     if (typeof window === 'undefined') return false;
-    return ('standalone' in window.navigator && window.navigator.standalone) ||
-      window.matchMedia('(display-mode: standalone)').matches ||
-      new URLSearchParams(window.location.search).get('source') === 'pwa';
+    try {
+      const fromPWAParam = new URLSearchParams(window.location.search).get('source') === 'pwa';
+      const isDisplayStandalone = window.matchMedia('(display-mode: standalone)').matches;
+      const isSafariStandalone = window.navigator.standalone === true;
+      // Must be BOTH in standalone display mode AND have the pwa param, OR Safari standalone
+      return (isDisplayStandalone && fromPWAParam) || isSafariStandalone;
+    } catch (e) {
+      return false;
+    }
   });
 
-  // This tracks if the app was JUST installed in the current session
   const [justInstalled, setJustInstalled] = useState(false);
-
-  // This tracks if the app is ALREADY installed (no beforeinstallprompt fired)
   const [isAppInstalled, setIsAppInstalled] = useState(false);
 
   useEffect(() => {
@@ -30,7 +34,6 @@ export const usePWAInstall = () => {
       e.preventDefault();
       setDeferredPrompt(e);
       setPromptChecked(true);
-      // If we get the prompt, the app is NOT installed
       setIsAppInstalled(false);
     };
 
@@ -38,19 +41,15 @@ export const usePWAInstall = () => {
       setJustInstalled(true);
       setIsAppInstalled(true);
       setDeferredPrompt(null);
-      console.log('PWA was installed');
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    // After a short delay, if beforeinstallprompt hasn't fired,
-    // the app is likely already installed (on supported browsers).
     const timer = setTimeout(() => {
       setPromptChecked(true);
     }, 3000);
 
-    // Also try the getInstalledRelatedApps API for real-time detection
     if ('getInstalledRelatedApps' in navigator) {
       navigator.getInstalledRelatedApps().then((apps) => {
         if (apps && apps.length > 0) {
@@ -66,10 +65,6 @@ export const usePWAInstall = () => {
     };
   }, []);
 
-  // The app is considered installed if:
-  // 1. The appinstalled event fired (justInstalled), OR
-  // 2. The beforeinstallprompt did NOT fire after 3s AND we're not on iOS
-  //    AND we're not in standalone mode (meaning we're in browser but app exists)
   const isInstalled = justInstalled || 
     isAppInstalled || 
     (promptChecked && !deferredPrompt && !isIOS && !isStandalone);
@@ -78,7 +73,6 @@ export const usePWAInstall = () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    console.log(`User response to the install prompt: ${outcome}`);
     setDeferredPrompt(null);
   };
 
