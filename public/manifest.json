@@ -2,7 +2,7 @@
   "name": "Hambre",
   "short_name": "Hambre",
   "description": "Access Hambre instantly from your home screen.",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "background_color": "#1C1917",

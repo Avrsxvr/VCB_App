@@ -52,7 +52,8 @@ function App() {
     // Check for standalone mode immediately on mount
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
                         window.navigator.standalone || 
-                        document.referrer.includes('android-app://');
+                        document.referrer.includes('android-app://') ||
+                        window.location.search.includes('source=pwa');
 
     console.log('Mount check - isStandalone:', isStandalone);
 
