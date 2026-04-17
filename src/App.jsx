@@ -23,6 +23,15 @@ function App() {
     }, 800);
   }, [isRedirecting, targetUrl]);
 
+  const handleVideoFinish = useCallback(() => {
+    setPlayingIntro(false);
+    // Only auto-redirect if we are playing the pollito intro (app open)
+    // The download video should just return to the landing page
+    if (currentVideo.includes('pollito_compressed')) {
+      handleRedirect();
+    }
+  }, [currentVideo, handleRedirect]);
+
   // Handle "Download App" button click
   const handleInstallAction = async () => {
     if (deferredPrompt) {
@@ -45,15 +54,8 @@ function App() {
   // ONLY play pollito video when opened from HOME SCREEN ICON (standalone mode)
   useEffect(() => {
     if (isStandalone) {
-      const hasPlayedThisSession = sessionStorage.getItem('intro-played') === 'true';
-      
-      if (!hasPlayedThisSession) {
-        setCurrentVideo('/icons/pollito_compressed.mp4');
-        setPlayingIntro(true);
-        sessionStorage.setItem('intro-played', 'true');
-      } else {
-        handleRedirect();
-      }
+      setCurrentVideo('/icons/pollito_compressed.mp4');
+      setPlayingIntro(true);
       
       const fallbackTimer = setTimeout(() => {
         handleRedirect();
@@ -82,7 +84,7 @@ function App() {
   return (
     <>
       {playingIntro && currentVideo && (
-        <VideoIntro src={currentVideo} onFinish={handleRedirect} />
+        <VideoIntro src={currentVideo} onFinish={handleVideoFinish} />
       )}
 
       <div className={`loader-wrapper ${isRedirecting ? 'active' : ''}`}>

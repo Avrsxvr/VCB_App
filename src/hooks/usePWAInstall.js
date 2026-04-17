@@ -11,16 +11,16 @@ export const usePWAInstall = () => {
     return /iphone|ipad|ipod/.test(userAgent) || isIPad;
   });
 
-  // STRICT standalone check: ONLY true when opened from app icon
-  // Uses the ?source=pwa query param we set in manifest.json start_url
+  // Standalone check: true when opened from app icon
   const [isStandalone] = useState(() => {
     if (typeof window === 'undefined') return false;
     try {
       const fromPWAParam = new URLSearchParams(window.location.search).get('source') === 'pwa';
       const isDisplayStandalone = window.matchMedia('(display-mode: standalone)').matches;
       const isSafariStandalone = window.navigator.standalone === true;
-      // Must be BOTH in standalone display mode AND have the pwa param, OR Safari standalone
-      return (isDisplayStandalone && fromPWAParam) || isSafariStandalone;
+      const isAndroidApp = document.referrer && document.referrer.includes('android-app://');
+      
+      return isDisplayStandalone || isSafariStandalone || fromPWAParam || isAndroidApp;
     } catch (e) {
       return false;
     }
