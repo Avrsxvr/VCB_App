@@ -31,6 +31,7 @@ export const VideoIntro = ({ src, onFinish }) => {
         autoPlay
         playsInline
         onEnded={onFinish}
+        onError={onFinish}
       />
       <button className="skip-button" onClick={onFinish}>
         Skip Intro
