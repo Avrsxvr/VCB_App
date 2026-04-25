@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePWAInstall } from './hooks/usePWAInstall';
 import { InstallBanner } from './components/InstallBanner';
 import { IOSInstructions } from './components/IOSInstructions';
@@ -12,6 +12,7 @@ function App() {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [playingIntro, setPlayingIntro] = useState(false);
   const [currentVideo, setCurrentVideo] = useState('');
+  const introStarted = useRef(false);
   const targetUrl = 'https://www.vcb.services';
 
   const handleRedirect = useCallback(() => {
@@ -54,7 +55,9 @@ function App() {
   useEffect(() => {
     const hasPlayed = sessionStorage.getItem('introPlayed');
     
-    if (isStandalone && !hasPlayed) {
+    if (isStandalone && !hasPlayed && !introStarted.current) {
+      introStarted.current = true;
+      sessionStorage.setItem('introPlayed', 'true'); // Set immediately to block restarts
       setCurrentVideo('/icons/pollito_compressed.mp4');
       setPlayingIntro(true);
       
