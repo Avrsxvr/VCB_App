@@ -4,7 +4,6 @@ const ASSETS_TO_CACHE = [
   '/index.html',
   '/manifest.json',
   '/icons/icon.jpg',
-  '/icons/download_video_optimized.mp4',
   '/icons/pollito_compressed.mp4'
 ];
 

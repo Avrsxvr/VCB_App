@@ -39,9 +39,7 @@ function App() {
       const { outcome } = await deferredPrompt.userChoice;
       
       if (outcome === 'accepted') {
-        // Play the download video after user accepts
-        setCurrentVideo('/icons/download_video_optimized.mp4');
-        setPlayingIntro(true);
+        // App is being installed
       }
     } else if (isIOS) {
       const contactInfo = document.querySelector('.ios-instruction');
@@ -59,12 +57,11 @@ function App() {
       
       const fallbackTimer = setTimeout(() => {
         handleRedirect();
-      }, 15000);
+      }, 300000); // Increased to 5 minutes (300s) to guarantee full playback
       
       return () => clearTimeout(fallbackTimer);
     }
-    // In browser mode: do nothing, just show the landing page
-  }, [isStandalone, handleRedirect]);
+  }, [isStandalone]); // Removed handleRedirect to prevent accidental re-runs
 
   // Show install banner after a delay
   useEffect(() => {
