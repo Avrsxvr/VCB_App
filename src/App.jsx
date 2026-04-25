@@ -28,6 +28,7 @@ function App() {
     // Only auto-redirect if we are playing the pollito intro (app open)
     // The download video should just return to the landing page
     if (currentVideo.includes('pollito_compressed')) {
+      sessionStorage.setItem('introPlayed', 'true');
       handleRedirect();
     }
   }, [currentVideo, handleRedirect]);
@@ -51,7 +52,9 @@ function App() {
 
   // ONLY play pollito video when opened from HOME SCREEN ICON (standalone mode)
   useEffect(() => {
-    if (isStandalone) {
+    const hasPlayed = sessionStorage.getItem('introPlayed');
+    
+    if (isStandalone && !hasPlayed) {
       setCurrentVideo('/icons/pollito_compressed.mp4');
       setPlayingIntro(true);
       
