@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pollito-v2'; // Bumped version to v2 to force update
+const CACHE_NAME = 'pollito-v3'; // Bumped version to v3 to force update
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
